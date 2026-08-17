@@ -7,7 +7,7 @@ terraform {
       version = "~> 4.0"
     }
   }
-    backend "azurerm" {
+  backend "azurerm" {
     resource_group_name  = "rg-terraform-state"
     storage_account_name = "tfstateazdevsecops01"
     container_name       = "tfstate"
