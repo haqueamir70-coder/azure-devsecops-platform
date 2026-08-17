@@ -25,3 +25,14 @@ module "network" {
 
   tags = var.tags
 }
+module "storage" {
+  source = "../../modules/storage"
+
+  resource_group_name = azurerm_resource_group.this.name
+  location            = azurerm_resource_group.this.location
+
+  storage_account_name = "stdevsecopsplatform01"
+  container_name       = "app-data"
+
+  tags = var.tags
+}
