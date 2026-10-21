@@ -18,7 +18,12 @@ output "management_subnet_id" {
   value       = azurerm_subnet.management.id
 }
 
-output "network_security_group_id" {
-  description = "ID of the network security group."
-  value       = azurerm_network_security_group.this.id
+output "app_network_security_group_id" {
+  description = "ID of the application subnet's network security group."
+  value       = azurerm_network_security_group.app.id
+}
+
+output "management_network_security_group_id" {
+  description = "ID of the management subnet's network security group."
+  value       = azurerm_network_security_group.management.id
 }
