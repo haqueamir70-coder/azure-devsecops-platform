@@ -4,26 +4,31 @@ A Terraform-focused portfolio project for exploring modular Azure infrastructure
 
 ## Repository layout
 
-The current repository includes:
+- `.github/` — GitHub Actions workflow configuration
+- `environments/dev/` — development root module and environment inputs
+- `modules/network/` — virtual network, app/management subnets, and separate NSGs
+- `modules/storage/` — StorageV2 account and private blob container
+- `.tflint.hcl` — TFLint configuration
 
-- `.github/` for workflow configuration
-- `environments/` for environment-specific configuration
-- `modules/` for reusable infrastructure components
-- `.tflint.hcl` for TFLint configuration
+## Network security model
 
-Inspect the current files in each directory to verify which resources and pipeline stages are implemented.
+The app subnet and management subnet now use separate network security groups:
 
-## Goals
+- **Application NSG:** allows inbound TCP/443 from any source. This is a broad internet-facing rule; in a real deployment, scope the source to the intended ingress path (for example, an approved load balancer, application gateway, or trusted CIDRs).
+- **Management NSG:** has no custom inbound allow rules, so the default inbound deny applies. Add narrowly scoped access only after defining a trusted management path such as VPN, Bastion, or a private jump host.
+- NSG rules alone do not create a complete security boundary. Review outbound flows, routing, private endpoints, diagnostics, and the actual workload exposure.
 
-- Organize Azure infrastructure as code into understandable modules.
-- Separate environment configuration from reusable resource definitions.
-- Add consistent formatting, validation, linting, and infrastructure security scanning.
-- Make plan output reviewable before infrastructure changes are applied.
-- Keep credentials and Terraform state out of source control.
+## Storage security and naming
 
-## Recommended local validation
+- The blob container is private, HTTPS-only is enabled, and minimum TLS is set to TLS 1.2.
+- The current example still enables public network access to the Storage account and shared-key authentication. Treat these as explicit demo trade-offs, not a hardened production baseline. Before using real data, design private endpoint/network access and Microsoft Entra ID data-plane authorization; validate the Terraform provider's authentication requirements before disabling shared keys.
+- Set `storage_account_name` through an environment input. Azure Storage account names are globally unique and must be 3–24 lowercase letters/numbers; do not rely on a shared example name.
 
-Run commands from the relevant Terraform root module:
+## CI and local validation
+
+The workflow under `.github/workflows/` defines format, initialization without a backend, validation, TFLint, and Checkov steps. This documentation does **not** claim those checks have passed; inspect the latest GitHub Actions run for evidence.
+
+From the relevant root module, after setting required inputs:
 
 ```bash
 terraform fmt -check -recursive
@@ -32,45 +37,17 @@ terraform validate
 tflint --recursive
 ```
 
-The exact command and working directory depend on the repository's module structure. Initialize normally with the configured backend when running a plan that requires remote state.
-
-## Suggested delivery pipeline
-
-```text
-Pull request
-    |
-    v
-Format + validate
-    |
-    v
-Lint + IaC security scan
-    |
-    v
-Review Terraform plan
-    |
-    v
-Approved deployment
-```
-
-This is a recommended target workflow, not a claim that every stage is already configured. Review `.github/workflows/` for the implemented triggers and jobs.
+The configured backend and Azure identity must be set up before running plans that use remote state. Do not apply infrastructure until the plan and security findings have been reviewed.
 
 ## Security principles
 
 - Prefer workload identity federation/OIDC for GitHub Actions to Azure where supported.
 - Grant only the Azure permissions required by the pipeline.
-- Store state in a secured remote backend with access controls and locking.
-- Never commit credentials, state files, or sensitive plan artifacts.
+- Secure remote state with access controls and locking.
+- Never commit credentials, state files, real `*.tfvars`, or sensitive plan artifacts.
 - Pin and review GitHub Actions and provider versions.
 - Require human review and protected-environment approval before production applies.
 - Add logging, diagnostics, policy checks, and a documented rollback/cleanup process.
-
-## Roadmap
-
-- Document each module's inputs, outputs, and examples.
-- Add automated format, validation, lint, and IaC security checks.
-- Add a clear development/staging/production configuration strategy.
-- Document remote state setup and Azure authentication.
-- Publish validation evidence and an architecture diagram after testing.
 
 ## Author
 
