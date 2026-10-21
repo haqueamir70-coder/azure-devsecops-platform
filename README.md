@@ -1,3 +1,33 @@
+<div align="center">
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0B1F3A,45:0078D4,100:00C7FF&height=190&section=header&text=Azure+DevSecOps+Platform&fontSize=34&fontColor=ffffff&animation=fadeIn" alt="DevSecOps pipeline banner" width="100%" />
+
+<img src="https://readme-typing-svg.demolab.com/?font=Fira+Code&weight=600&size=17&pause=1200&color=00C7FF&center=true&vCenter=true&width=900&height=40&lines=Terraform+%E2%80%A2+Azure+%E2%80%A2+Checkov+%E2%80%A2+TFLint+%E2%80%A2+GitHub+Actions" alt="Animated project tagline" />
+
+[![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC?style=for-the-badge&logo=terraform&logoColor=white)](https://developer.hashicorp.com/terraform)
+[![Azure](https://img.shields.io/badge/Microsoft-Azure-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/)
+[![Portfolio](https://img.shields.io/badge/Portfolio-MD%20Amirul-181717?style=for-the-badge&logo=github)](https://github.com/haqueamir70-coder)
+
+</div>
+
+> **Portfolio project:** implementation status and limitations are documented below. The diagram describes the intended workflow/architecture and is not proof of a successful production deployment.
+
+## 🗺️ Architecture at a Glance
+
+```mermaid
+flowchart TD
+  A[Pull Request] --> B[Terraform fmt and validate]
+  B --> C[TFLint]
+  C --> D[Checkov IaC scan]
+  D --> E[Review Terraform plan]
+  E --> F{Approved?}
+  F -- Yes --> G[Protected deployment]
+  F -- No --> H[Fix findings]
+  H --> B
+```
+
+---
+
 # Azure DevSecOps Platform
 
 A Terraform-focused portfolio project for exploring modular Azure infrastructure, environment separation, and security checks as part of an Infrastructure as Code workflow.
