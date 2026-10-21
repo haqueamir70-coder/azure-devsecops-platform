@@ -21,8 +21,8 @@ resource "azurerm_subnet" "management" {
   address_prefixes     = var.management_subnet_address_prefixes
 }
 
-resource "azurerm_network_security_group" "this" {
-  name                = "${var.vnet_name}-nsg"
+resource "azurerm_network_security_group" "app" {
+  name                = "${var.vnet_name}-app-nsg"
   location            = var.location
   resource_group_name = var.resource_group_name
 
@@ -41,12 +41,23 @@ resource "azurerm_network_security_group" "this" {
   tags = var.tags
 }
 
+resource "azurerm_network_security_group" "management" {
+  name                = "${var.vnet_name}-management-nsg"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+
+  # No custom inbound allow rules: inbound traffic is denied by the NSG default rule.
+  # Add narrowly scoped rules only when a trusted management access path is defined.
+
+  tags = var.tags
+}
+
 resource "azurerm_subnet_network_security_group_association" "app" {
   subnet_id                 = azurerm_subnet.app.id
-  network_security_group_id = azurerm_network_security_group.this.id
+  network_security_group_id = azurerm_network_security_group.app.id
 }
 
 resource "azurerm_subnet_network_security_group_association" "management" {
   subnet_id                 = azurerm_subnet.management.id
-  network_security_group_id = azurerm_network_security_group.this.id
+  network_security_group_id = azurerm_network_security_group.management.id
 }
