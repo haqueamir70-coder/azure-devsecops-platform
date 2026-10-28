@@ -13,15 +13,21 @@ resource "azurerm_virtual_network" "this" {
 }
 
 resource "azurerm_subnet" "private_endpoints" {
-  name                          = "snet-private-endpoints"
-  resource_group_name           = azurerm_resource_group.this.name
-  virtual_network_name          = azurerm_virtual_network.this.name
-  address_prefixes              = var.private_endpoint_subnet_prefix
+  name                              = "snet-private-endpoints"
+  resource_group_name               = azurerm_resource_group.this.name
+  virtual_network_name              = azurerm_virtual_network.this.name
+  address_prefixes                  = var.private_endpoint_subnet_prefix
   private_endpoint_network_policies = "Disabled"
 }
 
+resource "random_string" "suffix" {
+  length  = 5
+  upper   = false
+  special = false
+}
+
 resource "azurerm_key_vault" "this" {
-  name                          = substr(replace("${var.name_prefix}-${random_string.suffix.result}", "_", "-"), 0, 24)
+  name                          = "${var.name_prefix}-${random_string.suffix.result}"
   location                      = azurerm_resource_group.this.location
   resource_group_name           = azurerm_resource_group.this.name
   tenant_id                     = data.azurerm_client_config.current.tenant_id
@@ -38,16 +44,10 @@ resource "azurerm_key_vault" "this" {
 
   lifecycle {
     precondition {
-      condition     = length(var.name_prefix) >= 3 && can(regex("^[A-Za-z][A-Za-z0-9-]*[A-Za-z0-9]$", var.name_prefix))
-      error_message = "name_prefix must be at least 3 characters, start with a letter, and contain only letters, numbers, or hyphens."
+      condition     = length(var.name_prefix) >= 3 && length(var.name_prefix) <= 18 && can(regex("^[A-Za-z][A-Za-z0-9-]*[A-Za-z0-9]$", var.name_prefix))
+      error_message = "name_prefix must be 3–18 characters, start with a letter, end with a letter or number, and contain only letters, numbers, or hyphens."
     }
   }
-}
-
-resource "random_string" "suffix" {
-  length  = 5
-  upper   = false
-  special = false
 }
 
 resource "azurerm_private_dns_zone" "key_vault" {
@@ -60,7 +60,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "key_vault" {
   resource_group_name   = azurerm_resource_group.this.name
   private_dns_zone_name = azurerm_private_dns_zone.key_vault.name
   virtual_network_id    = azurerm_virtual_network.this.id
-  registration_enabled = false
+  registration_enabled  = false
 }
 
 resource "azurerm_private_endpoint" "key_vault" {
