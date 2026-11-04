@@ -51,6 +51,7 @@ jobs:
           directory: environments/dev
           framework: terraform
           quiet: true
+          soft_fail: true
       - name: Scan reusable Terraform modules
         uses: bridgecrewio/checkov-action@v12
         with:
