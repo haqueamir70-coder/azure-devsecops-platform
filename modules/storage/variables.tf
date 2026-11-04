@@ -19,6 +19,16 @@ variable "container_name" {
   default     = "app-data"
 }
 
+variable "private_endpoint_subnet_id" {
+  description = "Dedicated subnet ID for the blob private endpoint."
+  type        = string
+}
+
+variable "virtual_network_id" {
+  description = "VNet ID linked to the private DNS zone."
+  type        = string
+}
+
 variable "tags" {
   description = "Tags to apply to storage resources."
   type        = map(string)
