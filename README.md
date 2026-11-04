@@ -44,7 +44,7 @@ A Terraform-focused portfolio project for exploring modular Azure infrastructure
 
 The app subnet and management subnet now use separate network security groups:
 
-- **Application NSG:** allows inbound TCP/443 from any source. This is a broad internet-facing rule; in a real deployment, scope the source to the intended ingress path (for example, an approved load balancer, application gateway, or trusted CIDRs).
+- **Application NSG:** allows inbound TCP/443 only from the VNet service tag. Add an explicit Application Gateway/Front Door ingress path and narrowly scoped source rules before exposing a workload externally.
 - **Management NSG:** has no custom inbound allow rules, so the default inbound deny applies. Add narrowly scoped access only after defining a trusted management path such as VPN, Bastion, or a private jump host.
 - NSG rules alone do not create a complete security boundary. Review outbound flows, routing, private endpoints, diagnostics, and the actual workload exposure.
 
