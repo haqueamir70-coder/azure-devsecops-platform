@@ -18,6 +18,11 @@ output "management_subnet_id" {
   value       = azurerm_subnet.management.id
 }
 
+output "private_endpoint_subnet_id" {
+  description = "ID of the dedicated private endpoint subnet."
+  value       = azurerm_subnet.private_endpoints.id
+}
+
 output "app_network_security_group_id" {
   description = "ID of the application subnet's network security group."
   value       = azurerm_network_security_group.app.id
@@ -26,4 +31,9 @@ output "app_network_security_group_id" {
 output "management_network_security_group_id" {
   description = "ID of the management subnet's network security group."
   value       = azurerm_network_security_group.management.id
+}
+
+output "private_endpoint_network_security_group_id" {
+  description = "ID of the private endpoint subnet's network security group."
+  value       = azurerm_network_security_group.private_endpoints.id
 }
