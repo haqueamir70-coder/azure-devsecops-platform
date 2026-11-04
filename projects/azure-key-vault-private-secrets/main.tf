@@ -17,7 +17,30 @@ resource "azurerm_subnet" "private_endpoints" {
   resource_group_name               = azurerm_resource_group.this.name
   virtual_network_name              = azurerm_virtual_network.this.name
   address_prefixes                  = var.private_endpoint_subnet_prefix
-  private_endpoint_network_policies = "Disabled"
+  private_endpoint_network_policies = "NetworkSecurityGroupEnabled"
+}
+
+resource "azurerm_network_security_group" "private_endpoints" {
+  name                = "${var.name_prefix}-pe-nsg"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+
+  security_rule {
+    name                       = "DenyInternetInbound"
+    priority                   = 4096
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "private_endpoints" {
+  subnet_id                 = azurerm_subnet.private_endpoints.id
+  network_security_group_id = azurerm_network_security_group.private_endpoints.id
 }
 
 resource "random_string" "suffix" {
@@ -80,6 +103,8 @@ resource "azurerm_private_endpoint" "key_vault" {
     name                 = "key-vault-dns"
     private_dns_zone_ids = [azurerm_private_dns_zone.key_vault.id]
   }
+
+  depends_on = [azurerm_subnet_network_security_group_association.private_endpoints]
 }
 
 resource "azurerm_role_assignment" "workload_secrets_user" {
