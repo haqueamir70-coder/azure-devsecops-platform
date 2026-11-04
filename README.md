@@ -56,6 +56,8 @@ The app subnet and management subnet now use separate network security groups:
 
 ## CI and local validation
 
+Checkov scans the environment and reusable modules. Its current step is advisory while two storage controls remain open: customer-managed key integration and Blob read diagnostics. See [Checkov findings and production closure](docs/checkov-findings-and-exceptions.md). Do not use this lab for sensitive or regulated data until those findings are resolved or formally accepted.
+
 The workflow under `.github/workflows/` defines format, initialization without a backend, validation, TFLint, and Checkov steps. This documentation does **not** claim those checks have passed; inspect the latest GitHub Actions run for evidence.
 
 From the relevant root module, after setting required inputs:
