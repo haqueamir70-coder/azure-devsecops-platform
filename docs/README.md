@@ -75,3 +75,7 @@ Add Key Vault/Storage CMK integration with managed identity and diagnostic setti
 ### 10. Answer
 
 Use Terraform plan/apply evidence, Azure resource configuration queries, private DNS resolution tests, network connectivity tests and diagnostic logs. Static validation alone is insufficient.
+
+## Complete zero-to-hero guide
+
+See [ZERO-TO-HERO.md](./ZERO-TO-HERO.md) for the business scenario, architecture walkthrough, tool-by-tool explanations, implementation sequence, practical commands, troubleshooting playbook and additional scenario-based interview questions with answers.
