@@ -1,91 +1,127 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0B1F3A,45:0078D4,100:00C7FF&height=190&section=header&text=Azure+DevSecOps+Platform&fontSize=34&fontColor=ffffff&animation=fadeIn" alt="DevSecOps pipeline banner" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:071A2F,45:0067B9,100:00C7FF&height=220&section=header&text=Azure%20DevSecOps%20Foundation&fontSize=34&fontColor=ffffff&animation=fadeIn" width="100%" alt="Azure DevSecOps Foundation"/>
 
-<img src="https://readme-typing-svg.demolab.com/?font=Fira+Code&weight=600&size=17&pause=1200&color=00C7FF&center=true&vCenter=true&width=900&height=40&lines=Terraform+%E2%80%A2+Azure+%E2%80%A2+Checkov+%E2%80%A2+TFLint+%E2%80%A2+GitHub+Actions" alt="Animated project tagline" />
+### Secure infrastructure foundations · Policy checks · Network segmentation
 
-[![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC?style=for-the-badge&logo=terraform&logoColor=white)](https://developer.hashicorp.com/terraform)
-[![Azure](https://img.shields.io/badge/Microsoft-Azure-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/)
-[![Portfolio](https://img.shields.io/badge/Portfolio-MD%20Amirul-181717?style=for-the-badge&logo=github)](https://github.com/haqueamir70-coder)
+[![Azure](https://img.shields.io/badge/Azure-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/)
+[![Terraform](https://img.shields.io/badge/Terraform-844FBA?style=for-the-badge&logo=terraform&logoColor=white)](https://developer.hashicorp.com/terraform)
+[![TFLint](https://img.shields.io/badge/Lint-TFLint-623CE4?style=for-the-badge)](https://github.com/terraform-linters/tflint)
+[![Checkov](https://img.shields.io/badge/IaC_Security-Checkov-111827?style=for-the-badge)](https://www.checkov.io/)
+
+**A modular Azure infrastructure lab that puts network boundaries and infrastructure security checks into the Terraform development lifecycle.**
+
+[Architecture](#-architecture) · [Quick start](#-validate-the-foundation) · [Security posture](#-security-posture) · [Documentation](docs/README.md)
 
 </div>
 
-> **Portfolio project:** implementation status and limitations are documented below. The diagram describes the intended workflow/architecture and is not proof of a successful production deployment.
+> [!NOTE]
+> This repository is a Terraform reference foundation. It is not represented as a fully deployed production platform. Review the current CI run and the security findings before treating any control as validated.
 
-## 🗺️ Architecture at a Glance
+## Why this project exists
+
+Cloud infrastructure should be reviewed as application code: repeatable, linted, validated and scanned before deployment. This project focuses on reusable Azure network and storage foundations, with security findings made visible rather than silently ignored.
+
+## Architecture
 
 ```mermaid
-flowchart TD
-  A[Pull Request] --> B[Terraform fmt and validate]
-  B --> C[TFLint]
-  C --> D[Checkov IaC scan]
-  D --> E[Review Terraform plan]
-  E --> F{Approved?}
-  F -- Yes --> G[Protected deployment]
-  F -- No --> H[Fix findings]
-  H --> B
+flowchart TB
+  Engineer[Engineer] --> Git[GitHub pull request]
+  Git --> Actions[GitHub Actions]
+  Actions --> Fmt[Terraform format]
+  Fmt --> Validate[Terraform validate]
+  Validate --> Lint[TFLint]
+  Lint --> Scan[Checkov scan]
+  Scan --> Review[Human security review]
+  Review --> Plan[Separately authorized Terraform plan]
+  subgraph Azure[Azure foundation]
+    RG[Resource group]
+    VNet[Virtual network]
+    App[Application subnet + NSG]
+    Mgmt[Management subnet + NSG]
+    Storage[StorageV2 + private container]
+    RG --> VNet
+    VNet --> App
+    VNet --> Mgmt
+  end
+  Plan -. approved operation .-> Azure
 ```
 
----
+## Implemented foundation
 
-# Azure DevSecOps Platform
+| Component | Design intent |
+|---|---|
+| Terraform environment root | Environment-specific inputs and composition |
+| Network module | VNet, application and management subnets |
+| Application NSG | Sample inbound HTTPS rule scoped to the VNet service tag |
+| Management NSG | No custom inbound allow rule; default inbound deny remains |
+| Storage module | StorageV2 account and private blob container |
+| CI | Formatting, backend-free initialization, validation, TFLint and Checkov |
 
-A Terraform-focused portfolio project for exploring modular Azure infrastructure, environment separation, and security checks as part of an Infrastructure as Code workflow.
+## Security posture — read before applying
 
-## Repository layout
+- Application subnet sample rule permits TCP/443 from the VNet service tag; it is **not** an Internet-facing ingress design.
+- Management subnet has no custom inbound allow rule. Use an approved VPN, Bastion or private management path before enabling access.
+- The current storage example still enables Storage account public network access and shared-key authentication. These are documented as demo trade-offs, **not** a hardened production baseline.
+- Before storing real data, design private endpoint connectivity and Microsoft Entra data-plane authorization. Validate provider authentication requirements before disabling shared keys.
+- Checkov currently runs in advisory mode while customer-managed key integration and Blob read diagnostics remain open. See [Checkov findings and exceptions](docs/checkov-findings-and-exceptions.md).
 
-- `.github/` — GitHub Actions workflow configuration
-- `environments/dev/` — development root module and environment inputs
-- `modules/network/` — virtual network, app/management subnets, and separate NSGs
-- `modules/storage/` — StorageV2 account and private blob container
-- `.tflint.hcl` — TFLint configuration
+## Validate the foundation
 
-## Network security model
-
-The app subnet and management subnet now use separate network security groups:
-
-- **Application NSG:** allows inbound TCP/443 only from the VNet service tag. Add an explicit Application Gateway/Front Door ingress path and narrowly scoped source rules before exposing a workload externally.
-- **Management NSG:** has no custom inbound allow rules, so the default inbound deny applies. Add narrowly scoped access only after defining a trusted management path such as VPN, Bastion, or a private jump host.
-- NSG rules alone do not create a complete security boundary. Review outbound flows, routing, private endpoints, diagnostics, and the actual workload exposure.
-
-## Storage security and naming
-
-- The blob container is private, HTTPS-only is enabled, and minimum TLS is set to TLS 1.2.
-- The current example still enables public network access to the Storage account and shared-key authentication. Treat these as explicit demo trade-offs, not a hardened production baseline. Before using real data, design private endpoint/network access and Microsoft Entra ID data-plane authorization; validate the Terraform provider's authentication requirements before disabling shared keys.
-- Set `storage_account_name` through an environment input. Azure Storage account names are globally unique and must be 3–24 lowercase letters/numbers; do not rely on a shared example name.
-
-## CI and local validation
-
-Checkov scans the environment and reusable modules. Its current step is advisory while two storage controls remain open: customer-managed key integration and Blob read diagnostics. See [Checkov findings and production closure](docs/checkov-findings-and-exceptions.md). Do not use this lab for sensitive or regulated data until those findings are resolved or formally accepted.
-
-The workflow under `.github/workflows/` defines format, initialization without a backend, validation, TFLint, and Checkov steps. This documentation does **not** claim those checks have passed; inspect the latest GitHub Actions run for evidence.
-
-From the relevant root module, after setting required inputs:
+Use the development root module:
 
 ```bash
-terraform fmt -check -recursive
-terraform init -backend=false
-terraform validate
+terraform -chdir=environments/dev fmt -check -recursive
+terraform -chdir=environments/dev init -backend=false
+terraform -chdir=environments/dev validate
 tflint --recursive
 ```
 
-The configured backend and Azure identity must be set up before running plans that use remote state. Do not apply infrastructure until the plan and security findings have been reviewed.
+Run Checkov against the infrastructure directory:
 
-## Security principles
+```bash
+checkov -d . --framework terraform
+```
 
-- Prefer workload identity federation/OIDC for GitHub Actions to Azure where supported.
-- Grant only the Azure permissions required by the pipeline.
-- Secure remote state with access controls and locking.
-- Never commit credentials, state files, real `*.tfvars`, or sensitive plan artifacts.
-- Pin and review GitHub Actions and provider versions.
-- Require human review and protected-environment approval before production applies.
-- Add logging, diagnostics, policy checks, and a documented rollback/cleanup process.
+Check the actual repository workflow for the authoritative working directory and current CI commands. A successful static check does not prove that Azure deployment or runtime connectivity works.
 
-## Author
+## Repository map
 
-MD Amirul Haque · [GitHub profile](https://github.com/haqueamir70-coder) · [LinkedIn](https://www.linkedin.com/in/md-amirul-haque/)
+```text
+.github/workflows/       CI quality and security checks
+environments/dev/        Development Terraform root
+modules/network/         VNet, subnets and NSGs
+modules/storage/         Storage account and private container
+docs/                    Security findings and engineering guides
+.tflint.hcl              TFLint configuration
+```
 
+## Engineering decisions
 
-## Architecture and interview preparation
+1. Keep network zones explicit rather than relying on a flat VNet.
+2. Separate application and management access policies.
+3. Run static checks without cloud credentials where possible.
+4. Treat scanner findings as engineering work items with owners and closure evidence.
+5. Require a reviewed Terraform plan and a separately authorized deployment step.
 
-See the [architecture diagram and interview questions](docs/README.md) for the repository-specific design walkthrough and technical interview guide.
+## Roadmap
+
+- [ ] Close or formally accept the documented storage security findings.
+- [ ] Add private endpoint and private DNS design for storage.
+- [ ] Introduce narrowly scoped identity-based data-plane access.
+- [ ] Add diagnostics and centralized monitoring.
+- [ ] Validate the design in a disposable Azure subscription.
+- [ ] Capture genuine deployment and CI evidence.
+
+## Documentation
+
+- [Security findings and exceptions](docs/checkov-findings-and-exceptions.md)
+- [Architecture and interview guide](docs/README.md)
+- [Zero-to-hero implementation guide](docs/ZERO-TO-HERO.md)
+- [Advanced interview scenarios](docs/ADVANCED-INTERVIEW-BANK.md)
+
+## Maintainer
+
+**MD Amirul Haque** · [GitHub](https://github.com/haqueamir70-coder) · [LinkedIn](https://www.linkedin.com/in/md-amirul-haque/)
+
+<sub>Secure defaults are a design decision, not a badge.</sub>
